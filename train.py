@@ -14,8 +14,8 @@ def extract_sent_feats(sent: List[str]):
         features = dict()
         append_surrounding_tokens(features, sent, i)
         features["cap(t)"] = get_casing(sent[i])
-#         if get_accent(sent[i]):
-#             features["acc"] = get_accent(sent[i])
+        if get_accent(sent[i]):
+            features["acc"] = get_accent(sent[i])
         feats.append(features)
     return feats
         
@@ -63,6 +63,51 @@ def get_accent(word: bytes) -> str:
         else:
             return False
 
+        
+def get_unique_env(word: bytes) -> List[str]:
+    letters = ["y", 'q', 'h', 'k']
+    letters_present = []
+    for i in range(len(word)):
+        if word[i] in letters and len(word) > 1:
+            environment = []
+            if i > 0:
+                environment.append(('left', word[i - 1]))
+            if i > 1:
+                environment.append(('left2', word[i - 2:i - 1]))
+            if i + 1 < len(word):
+                environment.append(('right', word[i + 1]))
+            if i + 2 < len(word):
+                environment.append(('right2', word[i + 1:i + 2]))
+            if len(environment) > 0:
+                letters_present.append((word[i], environment))
+    return letters_present
+
+
+def get_non_alphabet(word: bytes) -> List[str]:
+    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ']
+    letters_present = []
+    if len(word) > 1:
+        for letter in word:
+            if letter not in alphabet:
+                letters_present.appen((letter, 'y'))
+
+
+def get_word_endings(word: bytes) -> List[str]:
+    endings = []
+    for i in range(4, 0, -1):
+        if len(word) > i:
+            endings.append(word[-i:])
+    return endings
+
+
+def get_foreign_letters(word: bytes) -> List[str]:
+    letters = ["tt", 'nn', 'oui', 'w', 'pp', 'zz', 'ff', 'gg', 'mm', 'ss', """'"""]
+    letters_present = []
+    for letter in letters:
+        if len(word) > 1 and letter in word:
+            letters_present.append((letter, 'y'))
+    return letters_present
+
 
 def get_file_features(path: str):
     features = []
@@ -92,7 +137,7 @@ def main() -> None:
     vectorizer = sklearn.feature_extraction.DictVectorizer()
     train_feats_vect = vectorizer.fit_transform(train_features)
     model = sklearn.linear_model.LogisticRegression(
-        penalty="l1", C=10, solver="liblinear", max_iter=200
+        penalty="l1", C=10, solver="liblinear", max_iter=10
     )
     model.fit(train_feats_vect, train_labels)
     test_features, test_labels = get_file_features("dev.conll")
@@ -122,5 +167,3 @@ def main() -> None:
 #                 print("", file=sink)
 
 main()
-                
-        
