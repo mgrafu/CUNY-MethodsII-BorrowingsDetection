@@ -14,8 +14,22 @@ def extract_sent_feats(sent: List[str]):
         features = dict()
         append_surrounding_tokens(features, sent, i)
         features["cap(t)"] = get_casing(sent[i])
+        endings = get_word_endings(sent[i])
+        if endings:
+            for end in endings:
+                features['last' + str(len(end))] = end
+        unique_envs = get_unique_env(sent[i])
+        if unique_envs:
+            for letter, env in unique_envs:
+                features[letter] = 'y'
+                for name, value in env:
+                    features[name] = value
         if get_accent(sent[i]):
             features["acc"] = get_accent(sent[i])
+        non_alphabet_letters = get_non_alphabet(sent[i])
+        if non_alphabet_letters:
+            for letter in non_alphabet_letters:
+                features[letter] = 'y'
         feats.append(features)
     return feats
         
@@ -56,14 +70,14 @@ def get_casing(word: bytes) -> str:
     return casing
 
 
-def get_accent(word: bytes) -> str:
-    for char in word:
-        if char in ['á', 'é', 'í', 'ó', 'ú']:
-            return char
-        else:
-            return False
+def get_word_endings(word: bytes) -> List[str]:
+    endings = []
+    for i in range(4, 0, -1):
+        if len(word) > i:
+            endings.append(word[-i:])
+    return endings
 
-        
+
 def get_unique_env(word: bytes) -> List[str]:
     letters = ["y", 'q', 'h', 'k']
     letters_present = []
@@ -78,34 +92,26 @@ def get_unique_env(word: bytes) -> List[str]:
                 environment.append(('right', word[i + 1]))
             if i + 2 < len(word):
                 environment.append(('right2', word[i + 1:i + 2]))
-            if len(environment) > 0:
+            if environment:
                 letters_present.append((word[i], environment))
     return letters_present
 
 
+def get_accent(word: bytes) -> str:
+    for char in word:
+        if char in ['á', 'é', 'í', 'ó', 'ú']:
+            return char
+        else:
+            return False
+
+        
 def get_non_alphabet(word: bytes) -> List[str]:
     alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ']
     letters_present = []
     if len(word) > 1:
         for letter in word:
             if letter not in alphabet:
-                letters_present.appen((letter, 'y'))
-
-
-def get_word_endings(word: bytes) -> List[str]:
-    endings = []
-    for i in range(4, 0, -1):
-        if len(word) > i:
-            endings.append(word[-i:])
-    return endings
-
-
-def get_foreign_letters(word: bytes) -> List[str]:
-    letters = ["tt", 'nn', 'oui', 'w', 'pp', 'zz', 'ff', 'gg', 'mm', 'ss', """'"""]
-    letters_present = []
-    for letter in letters:
-        if len(word) > 1 and letter in word:
-            letters_present.append((letter, 'y'))
+                letters_present.append(letter)
     return letters_present
 
 
@@ -137,33 +143,36 @@ def main() -> None:
     vectorizer = sklearn.feature_extraction.DictVectorizer()
     train_feats_vect = vectorizer.fit_transform(train_features)
     model = sklearn.linear_model.LogisticRegression(
-        penalty="l1", C=10, solver="liblinear", max_iter=10
+        penalty="l1", C=10, solver="liblinear", max_iter=200
     )
     model.fit(train_feats_vect, train_labels)
+    
     test_features, test_labels = get_file_features("dev.conll")
     test_feats_vect = vectorizer.transform(test_features)
     predictions = model.predict(test_feats_vect)
     num_correct = sum(
         [1 for gold, hyp in zip(test_labels, predictions) if gold == hyp]
     )
+    
     print(f"Correct: {num_correct}")
     print(f"Total: {len(test_labels)}")
     print(f"{num_correct/len(test_labels)*100}%")
     f1 = sklearn.metrics.f1_score(test_labels, predictions, average="micro")
     print(f"F1: {f1}")
-    print("word\t\tgold\thyp")
-    for feats, gold, hyp in zip(test_features, test_labels, predictions):
-        if gold != hyp:
-            print(feats["t+0"] + "\t" + "\t" + gold + "\t" + hyp)
-#     pred_features, _ = get_file_features("test.conll")
-#     pred_feats_vect = vectorizer.transform(pred_features)
-#     final_pred = model.predict(pred_feats_vect)
-#     with open("test.conll", "r") as source, open("results.txt", "w") as sink:
-#         for word, label in zip(source, final_pred):
-#             word = word.rstrip("\n")
-#             if word:
-#                 print(word + "\t" + label, file=sink)
-#             else:
-#                 print("", file=sink)
+    
+    pred_features, _ = get_file_features("test.conll")
+    pred_feats_vect = vectorizer.transform(pred_features)
+    final_pred = model.predict(pred_feats_vect)
+    
+    with open("test.conll", "r") as source, open("results.txt", "w") as sink:
+        i = 0
+        for word in source:
+            word = word.rstrip("\n")
+            if word:
+                print(word + "\t" + final_pred[i], file=sink)
+                i += 1
+            else:
+                print("", file=sink)
+
 
 main()
