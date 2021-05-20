@@ -1,11 +1,9 @@
 """Logistic regression classifier for borrowings in Spanish."""
 
 
-from typing import Any, Dict, List
-
 import features
 import sklearn.feature_extraction  # type: ignore
-import sklearn.naive_bayes  # type: ignore
+import sklearn.linear_model  # type: ignore
 
 
 class BorrowingsClassifier:
@@ -16,9 +14,8 @@ class BorrowingsClassifier:
     def __init__(self):
         self.vectorizer = sklearn.feature_extraction.DictVectorizer()
         self.classifier = sklearn.linear_model.LogisticRegression(
-        penalty="l1", C=10, solver="liblinear", max_iter=10
-    )
-
+            penalty="l1", C=10, solver="liblinear", max_iter=10
+        )
 
     def _get_file_features(self, path: str):
         features_dict = []
@@ -42,12 +39,11 @@ class BorrowingsClassifier:
                     sent_labels = []
         return features_dict, labels
 
-
     def train(self, path: str):
         x, y = self._get_file_features(path)
         xx = self.vectorizer.fit_transform(x)
         self.classifier.fit(xx, y)
-    
+
     def predict(self, path: str):
         features, gold = self._get_file_features(path)
         x = self.vectorizer.transform(features)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Borrowing detection training and prediction."""
 
 
@@ -7,9 +7,6 @@ import pickle
 
 import model
 import util
-import sklearn.feature_extraction  # type: ignore
-import sklearn.linear_model  # type: ignore
-import sklearn.metrics  # type: ignore
 
 
 def main(args: argparse.Namespace) -> None:
@@ -29,7 +26,7 @@ def main(args: argparse.Namespace) -> None:
         util.evaluate(gold, predictions)
     if args.test:
         util.write_file(predictions, args.test)
-            
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
