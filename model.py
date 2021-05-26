@@ -4,6 +4,7 @@
 import features
 import sklearn.feature_extraction  # type: ignore
 import sklearn.linear_model  # type: ignore
+import sklearn.naive_bayes  # type: ignore
 
 
 class BorrowingsClassifier:
@@ -11,11 +12,15 @@ class BorrowingsClassifier:
     training, and predicting, along with associated model
     and vectorization data."""
 
-    def __init__(self):
+    def __init__(self, model: str):
         self.vectorizer = sklearn.feature_extraction.DictVectorizer()
-        self.classifier = sklearn.linear_model.LogisticRegression(
-            penalty="l1", C=10, solver="liblinear", max_iter=10
-        )
+        if model == "logreg":
+            self.classifier = sklearn.linear_model.LogisticRegression(
+                penalty="l1", C=10, solver="liblinear", max_iter=100
+            )
+        elif model =="bayes":
+            self.classifier = sklearn.naive_bayes.BernoulliNB()
+
 
     def _get_file_features(self, path: str):
         features_dict = []
