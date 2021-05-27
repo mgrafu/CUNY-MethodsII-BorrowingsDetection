@@ -141,17 +141,17 @@ def extract_sent_feats(sent: List[str]):
         if endings:
             for end in endings:
                 sent_feats["last" + str(len(end))] = end
-#         unique_envs = get_unique_env(sent[i])
-#         if unique_envs:
-#             for letter, env in unique_envs:
-#                 sent_feats[letter] = "y"
-#                 for name, value in env:
-#                     sent_feats[name] = value
-#         if get_accent(sent[i]):
-#             sent_feats["acc"] = get_accent(sent[i])
-#         non_alphabet_letters = get_non_alphabet(sent[i])
-#         if non_alphabet_letters:
-#             for letter in non_alphabet_letters:
-#                 sent_feats[letter] = "y"
+        #         unique_envs = get_unique_env(sent[i])
+        #         if unique_envs:
+        #             for letter, env in unique_envs:
+        #                 sent_feats[letter] = "y"
+        #                 for name, value in env:
+        #                     sent_feats[name] = value
+        #         if get_accent(sent[i]):
+        #             sent_feats["acc"] = get_accent(sent[i])
+        #         non_alphabet_letters = get_non_alphabet(sent[i])
+        #         if non_alphabet_letters:
+        #             for letter in non_alphabet_letters:
+        #                 sent_feats[letter] = "y"
         feats.append(sent_feats)
     return feats

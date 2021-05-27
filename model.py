@@ -18,9 +18,8 @@ class BorrowingsClassifier:
             self.classifier = sklearn.linear_model.LogisticRegression(
                 penalty="l1", C=10, solver="liblinear", max_iter=100
             )
-        elif model =="bayes":
+        elif model == "bayes":
             self.classifier = sklearn.naive_bayes.BernoulliNB()
-
 
     def _get_file_features(self, path: str):
         features_dict = []

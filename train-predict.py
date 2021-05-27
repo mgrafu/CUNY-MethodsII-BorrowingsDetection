@@ -11,7 +11,7 @@ import util
 
 def main(args: argparse.Namespace) -> None:
     classifier = model.BorrowingsClassifier(args.modeltype)
-    model_path = [args.modelpath if args.modelpath else "model"][0]
+    model_path = args.modelpath if args.modelpath else "model"
     if args.train:
         classifier.train(args.train)
         with open(model_path, "wb") as sink:
@@ -20,7 +20,7 @@ def main(args: argparse.Namespace) -> None:
         with open(model_path, "rb") as source:
             classifier = pickle.load(source)
     if args.dev or args.test:
-        eval_path = [args.dev if args.dev else args.test][0]
+        eval_path = args.dev if args.dev else args.test
         predictions, gold = classifier.predict(eval_path)
     if args.dev:
         util.evaluate(gold, predictions)
